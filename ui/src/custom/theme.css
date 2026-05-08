@@ -1,0 +1,117 @@
+/* =========================================================================
+ * Horizon Logic — Tema customizado (LARANJA)
+ * -------------------------------------------------------------------------
+ * Este arquivo é carregado DEPOIS do ui/src/index.css original. Por
+ * cascata CSS, qualquer variável definida aqui sobrescreve a do upstream.
+ *
+ * Mude apenas os tokens que você quer customizar — os não declarados
+ * continuam vindo do paperclip oficial e atualizam automaticamente
+ * quando você fizer `git merge upstream/main`.
+ *
+ * Formato das cores: oklch(L C H)  (mesma sintaxe do tema base)
+ * Conversor útil: https://oklch.com
+ * Hue do laranja: ~50-65 (50 = laranja queimado, 65 = âmbar)
+ * ========================================================================= */
+
+/* -------- TEMA CLARO -------- */
+:root {
+  /* Cor primária / call-to-action — Horizon Orange (#ea580c) */
+  --primary: oklch(0.646 0.222 41.116);
+  --primary-foreground: oklch(0.985 0 0);
+
+  /* Acento (badges, hovers sutis) — laranja bem claro */
+  --accent: oklch(0.96 0.04 50);
+  --accent-foreground: oklch(0.35 0.15 41);
+
+  /* Sidebar */
+  --sidebar-primary: oklch(0.646 0.222 41.116);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.96 0.04 50);
+  --sidebar-accent-foreground: oklch(0.35 0.15 41);
+  --sidebar-ring: oklch(0.646 0.222 41.116);
+
+  /* Foco (ring de inputs/botões) */
+  --ring: oklch(0.646 0.222 41.116);
+
+  /* Charts — variações harmônicas em torno do laranja */
+  --chart-1: oklch(0.646 0.222 41.116); /* laranja primário (#ea580c) */
+  --chart-2: oklch(0.78 0.16 75);       /* âmbar */
+  --chart-3: oklch(0.55 0.2 30);        /* laranja queimado */
+  --chart-4: oklch(0.82 0.13 90);       /* amarelo-mostarda */
+  --chart-5: oklch(0.5 0.18 25);        /* terracota */
+
+  /* Border radius — paperclip usa 0px (flat); arredondamos cards, botões,
+     itens de menu, dropdowns, sidebar, etc. de uma só vez */
+  --radius: 0.5rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+}
+
+/* -------- TEMA ESCURO --------
+   Estratégia: laranja vibrante reservado pra CTAs, indicadores e charts.
+   Hovers, fundos ativos e itens de sidebar usam um cinza escuro com leve
+   calor (chroma ~0.01) — fica elegante sem competir com o primary. */
+.dark {
+  --primary: oklch(0.7 0.2 42);                   /* laranja vibrante mantido */
+  --primary-foreground: oklch(0.145 0 0);
+
+  /* Accent neutro com calor sutil — usado em hover e item ativo */
+  --accent: oklch(0.245 0.01 60);
+  --accent-foreground: oklch(0.97 0.005 60);
+
+  /* Secondary e muted ganham leve calor pra harmonia */
+  --secondary: oklch(0.21 0.008 60);
+  --secondary-foreground: oklch(0.97 0.005 60);
+  --muted: oklch(0.21 0.008 60);
+  --muted-foreground: oklch(0.68 0.01 60);
+
+  /* Borders mais sutis */
+  --border: oklch(0.27 0.008 60);
+  --input: oklch(0.27 0.008 60);
+
+  /* Sidebar — fundo ligeiramente diferente do background pra dar profundidade */
+  --sidebar: oklch(0.165 0.005 60);
+  --sidebar-foreground: oklch(0.97 0.005 60);
+  --sidebar-primary: oklch(0.7 0.2 42);
+  --sidebar-primary-foreground: oklch(0.145 0 0);
+  --sidebar-accent: oklch(0.26 0.01 60);
+  --sidebar-accent-foreground: oklch(0.98 0.005 60);
+  --sidebar-border: oklch(0.24 0.008 60);
+  --sidebar-ring: oklch(0.7 0.2 42);
+
+  /* Ring de foco continua laranja pra ser visível */
+  --ring: oklch(0.7 0.2 42);
+
+  /* Charts — paleta laranja/âmbar ainda, mas levemente menos saturada */
+  --chart-1: oklch(0.7 0.2 42);
+  --chart-2: oklch(0.78 0.14 75);
+  --chart-3: oklch(0.6 0.16 30);
+  --chart-4: oklch(0.82 0.11 90);
+  --chart-5: oklch(0.55 0.14 20);
+}
+
+/* -------- OVERRIDE DOS UTILITÁRIOS DE BORDER-RADIUS --------
+   O paperclip define --radius-lg/xl = 0 em @theme inline (Tailwind v4),
+   o que faz `.rounded-lg`/`.rounded-xl` serem compilados com border-radius: 0.
+   Sobrescrevemos as classes utilitárias diretamente. */
+.rounded-sm  { border-radius: 0.375rem !important; }
+.rounded-md  { border-radius: 0.5rem   !important; }
+.rounded-lg  { border-radius: 0.75rem  !important; }
+.rounded-xl  { border-radius: 1rem     !important; }
+.rounded-2xl { border-radius: 1.25rem  !important; }
+.rounded     { border-radius: 0.5rem   !important; }
+
+/* -------- SIDEBAR ITEMS --------
+   O SidebarNavItem do paperclip não usa classe rounded — design flat
+   intencional. Arredondamos via seletor estrutural. */
+aside nav a,
+aside nav button,
+aside nav [role="button"] {
+  border-radius: 0.5rem;
+}
+
+/* -------- ESTILOS CUSTOMIZADOS ADICIONAIS --------
+   Adicione aqui qualquer CSS extra (animações, classes utilitárias,
+   overrides de componentes específicos). */

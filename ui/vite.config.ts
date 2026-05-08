@@ -3,9 +3,10 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { createUiDevWatchOptions } from "./src/lib/vite-watch";
+import { i18nPlugin } from "./src/custom/i18n/vite-plugin-i18n"; // CUSTOM: Horizon Logic i18n
 
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), tailwindcss()],
+  plugins: [i18nPlugin(), react(), tailwindcss()], // CUSTOM: i18nPlugin antes do react()
   build: {
     minify: "esbuild",
   },
