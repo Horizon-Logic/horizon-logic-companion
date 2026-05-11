@@ -11,8 +11,9 @@ export const branding = {
   tagline: "Orquestração de agentes para sua empresa",
 
   // Caminhos de assets — coloque os arquivos em ui/public/custom/
-  logoLight: "/custom/logo-light.svg",
-  logoDark: "/custom/logo-dark.svg",
+  // (servidos via Vite a partir de paperclip/ui/public/)
+  logoLight: "/custom/horizon-logic.png",
+  logoDark: "/custom/horizon-logic.png",
   favicon: "/custom/favicon.ico",
 
   // Links institucionais
