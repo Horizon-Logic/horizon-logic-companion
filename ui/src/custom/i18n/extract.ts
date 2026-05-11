@@ -19,6 +19,7 @@ import {
   IGNORED_DIRS,
   TRANSLATABLE_EXTENSIONS,
   TRANSLATABLE_JSX_ATTRS,
+  TRANSLATABLE_OBJECT_KEYS,
   UI_ROOT,
   isTranslatable,
 } from "./config";
@@ -73,29 +74,24 @@ function extractFromFile(file: string): Set<string> {
       const t = decodeJsxText(p.node.value).trim();
       if (isTranslatable(t)) found.add(t);
     },
-    // Strings em ternários/lógicos dentro de JSX:
-    // {x ? "A" : "B"}, {x && "Done"}, attr={x ? "a" : "b"}, {"texto direto"}
+    // Strings em ternários/lógicos em qualquer contexto (JSX ou atribuições a variáveis)
+    ConditionalExpression(c) {
+      if (c.node.consequent.type === "StringLiteral" && isTranslatable(c.node.consequent.value)) {
+        found.add(c.node.consequent.value);
+      }
+      if (c.node.alternate.type === "StringLiteral" && isTranslatable(c.node.alternate.value)) {
+        found.add(c.node.alternate.value);
+      }
+    },
+    LogicalExpression(l) {
+      if (l.node.right.type === "StringLiteral" && isTranslatable(l.node.right.value)) {
+        found.add(l.node.right.value);
+      }
+    },
     JSXExpressionContainer(p) {
-      p.traverse({
-        ConditionalExpression(c) {
-          if (c.node.consequent.type === "StringLiteral" && isTranslatable(c.node.consequent.value)) {
-            found.add(c.node.consequent.value);
-          }
-          if (c.node.alternate.type === "StringLiteral" && isTranslatable(c.node.alternate.value)) {
-            found.add(c.node.alternate.value);
-          }
-        },
-        LogicalExpression(l) {
-          if (l.node.right.type === "StringLiteral" && isTranslatable(l.node.right.value)) {
-            found.add(l.node.right.value);
-          }
-        },
-        StringLiteral(s) {
-          if (s.parent.type === "JSXExpressionContainer" && isTranslatable(s.node.value)) {
-            found.add(s.node.value);
-          }
-        },
-      });
+      if (p.node.expression.type === "StringLiteral" && isTranslatable(p.node.expression.value)) {
+        found.add(p.node.expression.value);
+      }
     },
     JSXAttribute(p) {
       const n = p.node.name;
@@ -108,6 +104,21 @@ function extractFromFile(file: string): Set<string> {
       if (!attrName || !TRANSLATABLE_JSX_ATTRS.has(attrName)) return;
       const v = p.node.value;
       if (v?.type === "StringLiteral" && isTranslatable(v.value)) {
+        found.add(v.value);
+      }
+    },
+    // Object literal properties com chave whitelistada e valor StringLiteral.
+    ObjectProperty(p) {
+      const key = p.node.key;
+      const keyName =
+        key.type === "Identifier"
+          ? key.name
+          : key.type === "StringLiteral"
+            ? key.value
+            : null;
+      if (!keyName || !TRANSLATABLE_OBJECT_KEYS.has(keyName)) return;
+      const v = p.node.value;
+      if (v.type === "StringLiteral" && isTranslatable(v.value)) {
         found.add(v.value);
       }
     },
@@ -135,20 +146,29 @@ function main() {
   }
 
   const existing = loadExisting();
-  const merged: Record<string, string> = {};
   let kept = 0;
   let added = 0;
-  // ordena alfabeticamente para diff estável
-  const sorted = Array.from(allKeys).sort((a, b) => a.localeCompare(b));
-  for (const k of sorted) {
-    if (k in existing) {
-      merged[k] = existing[k];
+
+  // Separa preenchidas vs vazias e ordena alfabeticamente dentro de cada grupo.
+  // No arquivo final: traduzidas primeiro, depois as que ainda faltam.
+  const filled: string[] = [];
+  const empty: string[] = [];
+  for (const k of allKeys) {
+    const value = k in existing ? existing[k] : "";
+    if (value) {
+      filled.push(k);
       kept++;
     } else {
-      merged[k] = "";
-      added++;
+      empty.push(k);
+      if (!(k in existing)) added++;
     }
   }
+  filled.sort((a, b) => a.localeCompare(b));
+  empty.sort((a, b) => a.localeCompare(b));
+
+  const merged: Record<string, string> = {};
+  for (const k of filled) merged[k] = existing[k];
+  for (const k of empty) merged[k] = "";
 
   // detectar órfãs (existiam no JSON mas não estão mais no código)
   const orphans = Object.keys(existing).filter((k) => !allKeys.has(k));
@@ -158,7 +178,7 @@ function main() {
   const untranslated = Object.values(merged).filter((v) => !v).length;
   console.log(`📝 i18n extract`);
   console.log(`   Arquivos varridos:   ${fileCount}`);
-  console.log(`   Total de chaves:     ${sorted.length}`);
+  console.log(`   Total de chaves:     ${filled.length + empty.length}`);
   console.log(`   Mantidas:            ${kept}`);
   console.log(`   Novas (vazias):      ${added}`);
   console.log(`   Órfãs (removidas):   ${orphans.length}`);

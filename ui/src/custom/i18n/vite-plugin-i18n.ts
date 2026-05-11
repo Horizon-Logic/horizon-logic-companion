@@ -20,6 +20,7 @@ import type { Plugin } from "vite";
 import {
   DICT_PATH,
   TRANSLATABLE_JSX_ATTRS,
+  TRANSLATABLE_OBJECT_KEYS,
   isTranslatable,
 } from "./config";
 
@@ -140,27 +141,25 @@ export function i18nPlugin(): Plugin {
           );
           changed = true;
         },
-        // Captura StringLiterals em ternários/lógicos dentro de JSX.
-        // Ex: {loading ? "Saving..." : "Save"}, {ok && "Done"}, attr={x ? "a" : "b"}
+        // Captura StringLiterals em ternários/lógicos em qualquer contexto.
+        // Cobre tanto JSX (`{x ? "a" : "b"}`) quanto atribuições a variáveis
+        // (`const label = x ? "a" : "b"`) que depois são renderizadas em JSX.
+        // O filtro isTranslatable + lookup no dict protegem contra falsos positivos.
+        ConditionalExpression(c) {
+          if (c.node.consequent.type === "StringLiteral")
+            replaceStringLiteral(c.node.consequent);
+          if (c.node.alternate.type === "StringLiteral")
+            replaceStringLiteral(c.node.alternate);
+        },
+        LogicalExpression(l) {
+          if (l.node.right.type === "StringLiteral")
+            replaceStringLiteral(l.node.right);
+        },
+        // {"texto direto"} — StringLiteral filho direto de expressão JSX
         JSXExpressionContainer(p) {
-          p.traverse({
-            ConditionalExpression(c) {
-              if (c.node.consequent.type === "StringLiteral")
-                replaceStringLiteral(c.node.consequent);
-              if (c.node.alternate.type === "StringLiteral")
-                replaceStringLiteral(c.node.alternate);
-            },
-            LogicalExpression(l) {
-              if (l.node.right.type === "StringLiteral")
-                replaceStringLiteral(l.node.right);
-            },
-            // {"texto direto"} — StringLiteral filho direto da expressão
-            StringLiteral(s) {
-              if (s.parent.type === "JSXExpressionContainer") {
-                replaceStringLiteral(s.node);
-              }
-            },
-          });
+          if (p.node.expression.type === "StringLiteral") {
+            replaceStringLiteral(p.node.expression);
+          }
         },
         JSXAttribute(p) {
           const nameNode = p.node.name;
@@ -187,6 +186,22 @@ export function i18nPlugin(): Plugin {
           );
           ms.overwrite(start, end, `${quote}${escaped}${quote}`);
           changed = true;
+        },
+        // Object literal properties com chave whitelistada e valor StringLiteral.
+        // Cobre: setBreadcrumbs([{ label: "X" }]), toast({ title: "Y" }),
+        // arrays de config (registries de adapters, ações), etc.
+        ObjectProperty(p) {
+          const key = p.node.key;
+          const keyName =
+            key.type === "Identifier"
+              ? key.name
+              : key.type === "StringLiteral"
+                ? key.value
+                : null;
+          if (!keyName || !TRANSLATABLE_OBJECT_KEYS.has(keyName)) return;
+          const value = p.node.value;
+          if (value.type !== "StringLiteral") return;
+          replaceStringLiteral(value);
         },
       });
 
