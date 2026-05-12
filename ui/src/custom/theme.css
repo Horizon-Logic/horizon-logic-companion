@@ -55,7 +55,7 @@
    calor (chroma ~0.01) — fica elegante sem competir com o primary. */
 .dark {
   --primary: oklch(0.7 0.2 42);                   /* laranja vibrante mantido */
-  --primary-foreground: oklch(0.145 0 0);
+  --primary-foreground: oklch(0.985 0 0);          /* texto branco sobre laranja */
 
   /* Accent neutro com calor sutil — usado em hover e item ativo */
   --accent: oklch(0.245 0.01 60);
@@ -75,7 +75,7 @@
   --sidebar: oklch(0.165 0.005 60);
   --sidebar-foreground: oklch(0.97 0.005 60);
   --sidebar-primary: oklch(0.7 0.2 42);
-  --sidebar-primary-foreground: oklch(0.145 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.26 0.01 60);
   --sidebar-accent-foreground: oklch(0.98 0.005 60);
   --sidebar-border: oklch(0.24 0.008 60);
